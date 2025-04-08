@@ -17,18 +17,10 @@ import sys
 
 import neurokit2 as nk
 from scipy.signal import resample
-import torch.optim as optim
-from tqdm import tqdm
-import torch.nn as nn
-import random
-from torch.utils.data import Dataset
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
-from torch.utils.data import DataLoader
 import torch
-from torch.utils.tensorboard import SummaryWriter
-import torchmetrics
-from torchmetrics.classification import AUROC
+import torch.optim as optim
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
 
 from helper_code import *
 
@@ -50,8 +42,8 @@ def train_model(data_folder, model_folder, verbose):
         print('Finding the Challenge data...')
 
     records = find_records(data_folder)
-    # num_records = len(records)
-    num_records = 5000
+    num_records = 100
+    # num_records = len(records) 
     
 
     if num_records == 0:
@@ -90,14 +82,13 @@ def train_model(data_folder, model_folder, verbose):
     model = Vit_model(emb_dim=768, patch_height=1, patch_width=64, image_height=12).to(device)
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    auc_metric = AUROC(task="binary").to(device)
 
 
     # 执行训练和验证
     model = train(
         model, train_dataset, criterion, optimizer, 
         device, batch_size = 32, num_epochs=10, verbose = True,
-        model_folder = model_folder, writer = SummaryWriter())
+        model_folder = model_folder)
 
     # Create a folder for the model if it does not already exist.
     os.makedirs(model_folder, exist_ok=True)
@@ -227,7 +218,7 @@ class Vit_model(nn.Module):
         return probs
 
 # 定义训练和验证函数
-def train(model, train_dataset, criterion, optimizer, device, batch_size, num_epochs, writer, model_folder, verbose = True):
+def train(model, train_dataset, criterion, optimizer, device, batch_size, num_epochs, model_folder, verbose = True):
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     for epoch in range(num_epochs):
         model.train()
@@ -246,7 +237,6 @@ def train(model, train_dataset, criterion, optimizer, device, batch_size, num_ep
         
         print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_dataset):.4f}")
 
-    writer.close()
     return model
 
 # Load your trained models. This function is *required*. You should edit this function to add your code, but do *not* change the
