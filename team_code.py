@@ -42,8 +42,8 @@ def train_model(data_folder, model_folder, verbose):
         print('Finding the Challenge data...')
 
     records = find_records(data_folder)
-    num_records = 100
-    # num_records = len(records) 
+    #num_records = 100
+    num_records = len(records) 
     
 
     if num_records == 0:
